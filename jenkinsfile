@@ -50,13 +50,16 @@ pipeline {
             }
         }
 
-        stage('Send Deployment Email') {
+        stage('Send Email') {
     steps {
-        mail to: "${EMAIL}",
-             subject: "Deployment Successful: ${IMAGE_NAME}",
-             body: "The Docker container ${CONTAINER_NAME} is running on port ${PORT}."
+        emailext(
+            subject: "Deployment Successful: ${IMAGE_NAME}",
+            body: "The Docker container ${CONTAINER_NAME} is running on port ${PORT}.",
+            to: "${EMAIL}"
+        )
     }
 }
+
 
     }
 
