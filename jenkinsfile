@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         APP_DIR = "/var/www/my-app"
-        PM2 = "/usr/bin/pm2"
+        PM2 = "/usr/local/bin/pm2"
     }
 
     stages {
