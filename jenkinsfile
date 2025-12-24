@@ -1,30 +1,39 @@
-node {
-    def appDir ='/var/www/my-app'
+pipeline {
+    agent any
 
-    stage('Clean Workspace') {
-        echo 'Cleaning workspace...'
-        deleteDir()
+    environment {
+        APP_DIR = "/var/www/my-app"
     }
 
-    stage('Clone Repo') {
-        echo 'Cloning repository...'
-        git(
-            branch: 'main',
-            url: 'https://github.com/aryalbishnu/aws-jenkins'
-        )
-    }
-    stage('Deploy to Ec2') {
-        echo 'Deploying to EC2...'
-        sh """
-            sudo mkdir -p ${appDir}
-            sudo chown -R jenkins:jenkins ${appDir}
-            rsync -av --delete --exclude='.git' --exclude='node_modules' ./ ${appDir}
+    stages {
 
-            cd ${appDir}
-            sudo npm install
-            npm run build
-            sudo fuser -k 3000/tcp || true
-            npm start 
-        """
+        stage('Clean Workspace') {
+            steps {
+                deleteDir()
+            }
+        }
+
+        stage('Clone Repo') {
+            steps {
+                git branch: 'main',
+                    url: 'https://github.com/aryalbishnu/aws-jenkins'
+            }
+        }
+
+        stage('Deploy to EC2') {
+            steps {
+                sh '''
+                mkdir -p $APP_DIR
+                rsync -av --delete --exclude=.git --exclude=node_modules ./ $APP_DIR
+
+                cd $APP_DIR
+                npm install
+
+                pm2 stop my-app || true
+                pm2 start index.js --name my-app
+                pm2 save
+                '''
+            }
+        }
     }
 }
