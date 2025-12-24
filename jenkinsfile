@@ -23,17 +23,34 @@ pipeline {
         stage('Deploy to EC2') {
             steps {
                 sh '''
+                set -e
+
+                echo "Preparing application directory..."
                 mkdir -p $APP_DIR
+
+                echo "Syncing application files..."
                 rsync -av --delete --exclude=.git --exclude=node_modules ./ $APP_DIR
 
                 cd $APP_DIR
-                npm install
 
+                echo "Installing dependencies..."
+                npm ci
+
+                echo "Restarting application with PM2..."
                 pm2 stop my-app || true
                 pm2 start index.js --name my-app
                 pm2 save
                 '''
             }
+        }
+    }
+
+    post {
+        success {
+            echo "✅ Deployment completed successfully"
+        }
+        failure {
+            echo "❌ Deployment failed"
         }
     }
 }
