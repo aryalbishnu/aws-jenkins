@@ -51,12 +51,13 @@ pipeline {
         }
 
         stage('Send Deployment Email') {
-            steps {
-                mail to: "${EMAIL}",
-                     subject: "Deployment Successful: ${IMAGE_NAME}",
-                     body: "The Docker container ${CONTAINER_NAME} has been successfully deployed and is running on port ${PORT}."
-            }
-        }
+    steps {
+        mail to: "${EMAIL}",
+             subject: "Deployment Successful: ${IMAGE_NAME}",
+             body: "The Docker container ${CONTAINER_NAME} is running on port ${PORT}."
+    }
+}
+
     }
 
     post {
