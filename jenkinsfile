@@ -4,6 +4,10 @@ pipeline {
     environment {
         APP_DIR = "/var/www/my-app"
         PM2 = "/usr/local/bin/pm2"
+        CONTAINER_NAME = "my-node-app"
+        IMAGE_NAME = "my-node-app-image"
+        EMAIL = "ariyalbishnu@gmail.com"
+        PORT = "3000"
     }
 
     stages {
@@ -21,30 +25,36 @@ pipeline {
             }
         }
 
-        stage('Deploy to EC2') {
+        stage('Build Docker Image') {
             steps {
                 sh '''
-                set -e
-
-                echo "Preparing app directory..."
-                mkdir -p $APP_DIR
-
-                echo "Syncing source code..."
-                rsync -av --delete --exclude=.git --exclude=node_modules ./ $APP_DIR
-
-                cd $APP_DIR
-
-                echo "Removing old dependencies..."
-                rm -rf node_modules
-
-                echo "Installing dependencies..."
-                npm ci
-
-                echo "Restarting app with PM2..."
-                $PM2 stop my-app || true
-                $PM2 start index.js --name my-app
-                $PM2 save
+                docker build -t $IMAGE_NAME .
                 '''
+            }
+        }
+
+        stage('Stop and remove Existing Container') {
+            steps {
+                sh '''
+                docker stop $CONTAINER_NAME || true
+                docker rm $CONTAINER_NAME || true
+                '''
+            }
+        }
+
+        stage('Run Docker Container') {
+            steps {
+                sh '''
+                docker run -d --name $CONTAINER_NAME -p $PORT:$PORT $IMAGE_NAME
+                '''
+            }
+        }
+
+        stage('Send Deployment Email') {
+            steps {
+                mail to: "${EMAIL}",
+                     subject: "Deployment Successful: ${IMAGE_NAME}",
+                     body: "The Docker container ${CONTAINER_NAME} has been successfully deployed and is running on port ${PORT}."
             }
         }
     }
@@ -58,3 +68,4 @@ pipeline {
         }
     }
 }
+
