@@ -25,18 +25,21 @@ pipeline {
                 sh '''
                 set -e
 
-                echo "Preparing application directory..."
+                echo "Preparing app directory..."
                 mkdir -p $APP_DIR
 
-                echo "Syncing application files..."
+                echo "Syncing source code..."
                 rsync -av --delete --exclude=.git --exclude=node_modules ./ $APP_DIR
 
                 cd $APP_DIR
 
+                echo "Removing old dependencies (safety)..."
+                rm -rf node_modules
+
                 echo "Installing dependencies..."
                 npm ci
 
-                echo "Restarting application with PM2..."
+                echo "Restarting app with PM2..."
                 pm2 stop my-app || true
                 pm2 start index.js --name my-app
                 pm2 save
