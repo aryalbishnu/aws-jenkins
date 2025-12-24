@@ -3,6 +3,7 @@ pipeline {
 
     environment {
         APP_DIR = "/var/www/my-app"
+        PM2 = "/usr/bin/pm2"
     }
 
     stages {
@@ -33,16 +34,16 @@ pipeline {
 
                 cd $APP_DIR
 
-                echo "Removing old dependencies (safety)..."
+                echo "Removing old dependencies..."
                 rm -rf node_modules
 
                 echo "Installing dependencies..."
                 npm ci
 
                 echo "Restarting app with PM2..."
-                pm2 stop my-app || true
-                pm2 start index.js --name my-app
-                pm2 save
+                $PM2 stop my-app || true
+                $PM2 start index.js --name my-app
+                $PM2 save
                 '''
             }
         }
